@@ -25,9 +25,9 @@
       // }});
       
       function renderTimeline(tweets) {
-        $.each(tweets, function(i, tweet) { 
-          // todo map
-          $("#tweets ul").append('<li><img class="profile" src="'+tweet.user.profile_image_url+'" />'
+        $("#tweets ul").html($.map(tweets, function(tweet) { 
+          return '<li><img class="profile" src="'
+            + tweet.user.profile_image_url + '" />'
             + '<h3><a class="user" title="'
             + tweet.user.screen_name + '" href="http://twitter.com/'
             + tweet.user.screen_name + '">'
@@ -38,8 +38,8 @@
             // + relative_time(tweet.created_at)  
             + ' via '
             + tweet.source  
-            + '</span><br class="clear"/></li>'); 
-        });        
+            + '</span><br class="clear"/></li>'; 
+        }).join(''));
       };
       
       var db = $.couch.db(document.location.href.split('/')[3]);
