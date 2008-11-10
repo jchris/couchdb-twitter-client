@@ -13,23 +13,23 @@
   <script src="/_utils/script/json2.js"></script>
   <script src="/_utils/script/jquery.js?1.2.6"></script>
   <script src="/_utils/script/jquery.couch.js?0.8.0"></script>
-  <script src="tweets.js"></script>
+
+  <script src="user.js"></script>
+  <script src="twitter-couch.js"></script>
   <script type="text/javascript" charset="utf-8">
     $(function() {
-      // var dbname = document.location.href.split('/')[3];
-      // var design = unescape(document.location.href.split('/')[4]).split('/')[1];
-      // var DB = $.couch.db(dbname);
       // DB.view(design+"/example",{success: function(json) {
       //   $("#view").html(json.rows.map(function(row) {
       //     return '<li>'+row.key+'</li>';
       //   }).join(''));
       // }});
       
-      function friendsTimeline(tweets) {
+      function renderTimeline(tweets) {
         $.each(tweets, function(i, tweet) { 
           // todo map
           $("#tweets ul").append('<li><img class="profile" src="'+tweet.user.profile_image_url+'" />'
-            + '<h3><a class="user" href="http://twitter.com/'
+            + '<h3><a class="user" title="'
+            + tweet.user.screen_name + '" href="http://twitter.com/'
             + tweet.user.screen_name + '">'
             + tweet.user.name
             +'</a></h3>'
@@ -42,11 +42,14 @@
         });        
       };
       
-      friendsTimeline(tweets);
-      // var url = "http://twitter.com/statuses/friends_timeline.json?&callback=?"; 
-      // $.getJSON(url, function(data){
-      // 
-      // });
+      var db = $.couch.db(document.location.href.split('/')[3]);
+      var design = new CouchDesign(db, unescape(document.location.href).split('/')[5]);
+      
+      TwitterCouch(db, design, function(tw) {
+        tw.friendsTimeline(function(tweets) {
+          renderTimeline(tweets);
+        });
+      });
       
     });
   </script>
