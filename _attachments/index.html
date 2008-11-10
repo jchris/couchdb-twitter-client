@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>CouchDB Twitter Client</title>
+    <link rel="stylesheet" href="screen.css" type="text/css">
+  </head>
+  <body>
+    <h1>Twitter Client</h1>
+    <ul id="view"></ul>
+    
+    <div id="tweets"> 
+      <img id="profile"> 
+      <ul></ul> 
+    </div>
+    
+  </body>
+  <script src="/_utils/script/json2.js"></script>
+  <script src="/_utils/script/jquery.js?1.2.6"></script>
+  <script src="/_utils/script/jquery.couch.js?0.8.0"></script>
+  <script type="text/javascript" charset="utf-8">
+    $(function() {
+      var dbname = document.location.href.split('/')[3];
+      var design = unescape(document.location.href.split('/')[4]).split('/')[1];
+      var DB = $.couch.db(dbname);
+      DB.view(design+"/example",{success: function(json) {
+        $("#view").html(json.rows.map(function(row) {
+          return '<li>'+row.key+'</li>';
+        }).join(''));
+      }});
+      
+      console.log('heello')
+      
+      var url = "http://twitter.com/status/user_timeline/jchris.json?count=10&callback=?"; 
+      $.getJSON(url, function(data){
+        console.log(data);
+        $("img#profile").attr("src", data[0].user["profile_image_url"]);  
+        $.each(data, function(i, item) { 
+          $("#tweets ul").append("<li>"  
+            + item.text  
+            + " <span class='created_at'>"  
+            // + relative_time(item.created_at)  
+            + " via "  
+            + item.source  
+            + "</span></li>"); 
+        }); 
+      });
+      
+    });
+  </script>
+</html>
