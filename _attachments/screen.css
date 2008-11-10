@@ -1,0 +1,34 @@
+html {
+  background:#222;
+  color:#bbb;
+  font-family: Verdana, sans-serif;
+  font-size:10pt;
+}
+
+a {
+  text-decoration:none;
+}
+
+#tweets li {
+  background:#444;
+  margin:5px;
+  padding:5px;
+}
+
+#tweets h3 {
+  font-weight:bold;
+}
+
+#tweets h3 a {
+  color:#fff;
+}
+
+#tweets img.profile {
+  float:left;
+  padding-right:5px;
+}
+
+br.clear {
+  clear:both;
+  height:1px;
+}
