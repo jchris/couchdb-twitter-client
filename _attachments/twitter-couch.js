@@ -38,7 +38,7 @@ function TwitterCouch(db, design, callback) {
       endkey : [userId],
       group :true,
       descending : true,
-      count : 20,
+      count : 50,
       success : function(json){
         cb(uniqueValues(json.rows));
       }
@@ -50,8 +50,11 @@ function TwitterCouch(db, design, callback) {
       viewFriendsTimeline(currentUser.id, function(storedTweets) {
         cb(storedTweets);
         var newestTweet = storedTweets[0];
-        getJSON("/statuses/friends_timeline",{since_id:newestTweet.id}, 
-        function(tweets) {
+        var opts = {};
+        if (newestTweet) {
+          opts.since_id = newestTweet.id;
+        }
+        getJSON("/statuses/friends_timeline", opts, function(tweets) {
           if (tweets.length > 0) {
             var doc = {
               tweets : tweets,
@@ -61,7 +64,7 @@ function TwitterCouch(db, design, callback) {
               viewFriendsTimeline(currentUser.id, cb);
             }});
           }
-        });        
+        });
       });
     }
   };
