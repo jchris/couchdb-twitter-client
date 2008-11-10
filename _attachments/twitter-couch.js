@@ -12,6 +12,13 @@ function TwitterCouch(db, design, callback) {
     $.getJSON(url, params, cb);
   };
 
+  function cheapJSONP(url) {
+    var s = document.createElement('script');
+    s.src = url;
+    s.type='text/javascript';
+    document.body.appendChild(s);
+  };
+
   function uniqueValues(rows) {
     var values = [];
     var keyMap = {};
@@ -59,10 +66,12 @@ function TwitterCouch(db, design, callback) {
     }
   };
 
-  getJSON("/statuses/user_timeline", {count:1}, function(data) {
-    // var data = userInfo;
+  // this is hackish to get around the brokenness of twitter cache
+  window.userInfo = function(data) {
     currentUser = data[0].user;
     currentUser.last_tweet = data[0];
     callback(tw);
-  });
+  };
+
+  cheapJSONP("http://"+host+"/statuses/user_timeline.json?count=1&callback=userInfo");
 };
