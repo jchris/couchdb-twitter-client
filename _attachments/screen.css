@@ -16,6 +16,10 @@ a {
   padding:5px;
 }
 
+#tweets li.reply {
+  background:#336;
+}
+
 #tweets h3 {
   font-weight:bold;
 }

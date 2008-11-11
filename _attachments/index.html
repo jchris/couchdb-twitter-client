@@ -55,9 +55,10 @@
       		Math.ceil( day_diff / 365 ) + " years ago";
       }
 
-      function renderTimeline(tweets) {
-        $("#tweets ul").html($.map(tweets, function(tweet) { 
-          return '<li><img class="profile" src="'
+      function renderTimeline(tweets, userid) {
+        $("#tweets ul").html($.map(tweets, function(tweet) {
+          var reply = (userid && tweet.in_reply_to_user_id && tweet.in_reply_to_user_id == userid);
+          return '<li'+(reply?' class="reply"':'')+'><img class="profile" src="'
             + tweet.user.profile_image_url + '" />'
             + '<h3><a target="_blank" class="user" title="'
             + tweet.user.screen_name + '" href="http://twitter.com/'
@@ -98,6 +99,9 @@
         $('a[href="#refreshTweets"]').click(function() {
           tw.friendsTimeline(renderTimeline, true);
         });
+        setInterval(function() {
+          tw.friendsTimeline(renderTimeline);
+        },1000*60*5);
         
         $('#updateStatus').submit(function(e) {
           e.preventDefault();

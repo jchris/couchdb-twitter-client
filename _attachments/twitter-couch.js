@@ -40,7 +40,7 @@ function TwitterCouch(db, design, callback) {
       descending : true,
       count : 50,
       success : function(json){
-        cb(uniqueValues(json.rows));
+        cb(uniqueValues(json.rows), currentTwitterID);
       }
     });
   };
@@ -53,7 +53,7 @@ function TwitterCouch(db, design, callback) {
       $.cookies.set('twitter-last-call', now);
       return true;
     } else {
-      if (now - previousCall > 1000 * 60 * 5) {
+      if (now - previousCall > 1000 * 60 * 2) {
         $.cookies.set('twitter-last-call', now);
         return true;
       } else {
@@ -96,7 +96,7 @@ function TwitterCouch(db, design, callback) {
   var publicMethods = {
     friendsTimeline : function(cb, force) {
       viewFriendsTimeline(currentTwitterID, function(storedTweets) {
-        cb(storedTweets);
+        cb(storedTweets, currentTwitterID);
         if (apiCallProceed(force)) {
           var newestTweet = storedTweets[0];
           var opts = {};
