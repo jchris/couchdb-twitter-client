@@ -12,7 +12,7 @@
     <div id="controls-wrap">
       <div id="controls">
         <div id="buttons">
-          <a href="#refreshTweets" title="Refresh Tweets">&#x293F</a>        
+          <a id="refreshTweets" href="#refreshTweets" title="Refresh Tweets">&#x293F</a>
         </div>
         <form id="updateStatus" action="#">
           <span id="statusCount">140</span>
@@ -34,6 +34,14 @@
   <script src="twitter-couch.js"></script>
   <script type="text/javascript" charset="utf-8">
     $(function() {
+
+      $('#refreshTweets').ajaxStart(function() {
+        $(this).addClass('loading');
+      });
+
+      $('#refreshTweets').ajaxStop(function() {
+        $(this).removeClass('loading');
+      });
 
       function prettyDate(time){
       	var date = new Date(time),
@@ -63,6 +71,10 @@
         $('#statusCount').text(140 - len);          
       };
 
+      function a(href, text, cls) {
+        return '<a target="_blank" '+(cls?'class="'+cls+'"':'')+' href="'+href+'">'+text+'</a>'
+      };
+
       function linkify(body) {
         return body.replace(/https?\:\/\/\S+/g,function(a) {
           return '<a target="_blank" href="'+a+'">'+a+'</a>';
@@ -84,7 +96,11 @@
             + user.location
             +'</dd><dt>Bio:</dt><dd>'
             + linkify(user.description)
-            +'</dd><dt>Web:</dt><dd><a href="'+user.url+'">'+user.url+'</a></dd></dl><div class="word-cloud">Loading word cloud...</div><br class="clear"></br></div>');
+            +'</dd><dt>Web:</dt><dd>'
+            + a(user.url, user.url)
+            + '</dd><dt>Followers:</dt><dd>'
+            + a('http://twitter.com/'+user.screen_name+'/followers', user.followers_count)
+            +'</dd></dl><div class="word-cloud">Loading word cloud...</div><br class="clear"></br></div>');
             tw.userWordCloud(userid, function(cloud) {
               var html = $.map(cloud,function(row) {
                 return '<span title="'+row[1]+'" style="font-size:'+(parseInt(row[1])+5)+'px">'+linkify(row[0])+'</span>';
@@ -110,7 +126,7 @@
               +'</a></h3>'
               + linkify(tweet.text)
               + ' <span class="created_at">'
-              + prettyDate(tweet.created_at)  
+              + a('http://twitter.com/'+tweet.user.screen_name+'/status/'+tweet.id, prettyDate(tweet.created_at))  
               + ' via '
               + tweet.source  
               + '</span><br class="clear"/></li>'; 
@@ -133,6 +149,9 @@
           tw.updateStatus(status);
           $('#updateStatus textarea').val('');
           updateCount();
+          setTimeout(function() {
+            tw.friendsTimeline(renderTimeline, true);            
+          },500);
         });
       });
 

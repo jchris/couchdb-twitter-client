@@ -38,7 +38,7 @@ function TwitterCouch(db, design, callback) {
       endkey : [userId],
       group :true,
       descending : true,
-      count : 50,
+      count : 80,
       success : function(json){
         cb(uniqueValues(json.rows), currentTwitterID);
       }
@@ -66,11 +66,12 @@ function TwitterCouch(db, design, callback) {
     var previousCall = $.cookies.get('twitter-last-call');
     var d  = new Date;
     var now = d.getTime();
-    if (force || !previousCall) {
+    if (!previousCall) {
       $.cookies.set('twitter-last-call', now);
       return true;
     } else {
-      if (now - previousCall > 1000 * 60 * 2) {
+      var minutes = force ? 1 : 3;
+      if (now - previousCall > 1000 * 60 * minutes) {
         $.cookies.set('twitter-last-call', now);
         return true;
       } else {
