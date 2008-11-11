@@ -7,10 +7,11 @@ html {
 
 a {
   text-decoration:none;
+  color: #bbf;
 }
 
 #tweets li {
-  background:#444;
+  background:#333;
   margin:5px;
   padding:5px;
 }
@@ -26,9 +27,84 @@ a {
 #tweets img.profile {
   float:left;
   padding-right:5px;
+  width:48px;
+  height:48px;
 }
 
 br.clear {
   clear:both;
   height:1px;
+}
+
+#tweets .created_at {
+  float:right;
+  font-size:0.8em;
+  color:#777;
+}
+
+#tweets {
+  margin-bottom:105px;
+}
+
+#controls-wrap {
+  height:100px;
+  position:fixed;
+  bottom:0;
+  width:100%;
+  background:#000;
+}
+
+
+#controls {
+  padding:5px;
+}
+
+#buttons {
+  float:left;
+  font-size:2em;
+}
+
+#buttons a {
+  padding:2px;
+  margin:2px;
+  background:#333;
+  color:#bbb;
+  height:20px;
+  width:20px;
+  display:block;
+  text-align:center;
+  line-height:0.5em;
+}
+
+#buttons a:hover {
+  color:#c70;
+}
+
+form#updateStatus {
+  background:#222;
+  padding:5px;
+  margin:5px;
+}
+
+form#updateStatus textarea {
+  background:#444;
+  border:1px inset #000;
+  color:#eee;
+  padding:2px;
+}
+
+#statusCount {
+  float:right;
+}
+
+form#updateStatus input {
+  background:#888;
+  margin:2px;
+  position:relative;
+  top:-6px;
+}
+
+p#about {
+  float:right;
+  font-size:0.8em;
 }

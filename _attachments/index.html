@@ -8,34 +8,65 @@
   <body>
     <div id="tweets"> 
       <ul></ul> 
-    </div>    
+    </div>
+    <div id="controls-wrap">
+      <div id="controls">
+        <div id="buttons">
+          <a href="#refreshTweets" title="Refresh Tweets">&#x293F</a>        
+        </div>
+        <form id="updateStatus" action="#">
+          <span id="statusCount">140</span>
+          <label for="status">Status:</label>
+          <textarea name="status" rows="3" cols="52"></textarea>
+          <input type="submit" value="Tweet">
+        </form>
+        <p id="about"><a href="http://github.com/jchris/couchdb-twitter-client/tree/master">CouchDB Twitter Client</a>: another 24 hour hack by <a href="http:/jchris.mfdz.com/">J Chris Anderson</a>.</p>
+      </div>
+    </div>
   </body>
   <script src="/_utils/script/json2.js"></script>
   <script src="/_utils/script/jquery.js?1.2.6"></script>
   <script src="/_utils/script/jquery.couch.js?0.8.0"></script>
+  <script src="/_utils/script/jquery.cookies.js"></script>
 
   <script src="user.js"></script>
+  <script src="jquery.xdompost.js"></script>
   <script src="twitter-couch.js"></script>
   <script type="text/javascript" charset="utf-8">
     $(function() {
-      // DB.view(design+"/example",{success: function(json) {
-      //   $("#view").html(json.rows.map(function(row) {
-      //     return '<li>'+row.key+'</li>';
-      //   }).join(''));
-      // }});
-      
+
+      function prettyDate(time){
+      	var date = new Date(time),
+      		diff = (((new Date()).getTime() - date.getTime()) / 1000),
+      		day_diff = Math.floor(diff / 86400);
+
+        // if ( isNaN(day_diff) || day_diff < 0 || day_diff >= 31 ) return;
+
+      	return day_diff < 1 && (
+      			diff < 60 && "just now" ||
+      			diff < 120 && "1 minute ago" ||
+      			diff < 3600 && Math.floor( diff / 60 ) + " minutes ago" ||
+      			diff < 7200 && "1 hour ago" ||
+      			diff < 86400 && Math.floor( diff / 3600 ) + " hours ago") ||
+      		day_diff == 1 && "yesterday" ||
+      		day_diff < 7 && day_diff + " days ago" ||
+      		day_diff < 31 && Math.ceil( day_diff / 7 ) + " weeks ago" ||
+      		day_diff < 730 && Math.ceil( day_diff / 31 ) + " months ago" ||
+      		Math.ceil( day_diff / 365 ) + " years ago";
+      }
+
       function renderTimeline(tweets) {
         $("#tweets ul").html($.map(tweets, function(tweet) { 
           return '<li><img class="profile" src="'
             + tweet.user.profile_image_url + '" />'
-            + '<h3><a class="user" title="'
+            + '<h3><a target="_blank" class="user" title="'
             + tweet.user.screen_name + '" href="http://twitter.com/'
             + tweet.user.screen_name + '">'
             + tweet.user.name
             +'</a></h3>'
-            + tweet.text  
+            + linkify(tweet.text)
             + ' <span class="created_at">'
-            // + relative_time(tweet.created_at)  
+            + prettyDate(tweet.created_at)  
             + ' via '
             + tweet.source  
             + '</span><br class="clear"/></li>'; 
@@ -44,13 +75,42 @@
       
       var db = $.couch.db(document.location.href.split('/')[3]);
       var design = new CouchDesign(db, unescape(document.location.href).split('/')[5]);
-      
+
+      function updateCount() {
+        var len = $('#updateStatus textarea').val().length;
+        $('#statusCount').text(140 - len);          
+      };
+
+      function linkify(body) {
+        return body.replace(/https?\:\/\/\S+/g,function(a) {
+          return '<a target="_blank" href="'+a+'">'+a+'</a>';
+        }).replace(/\@([\w\-]+)/g,function(user,name) {
+          return '<a target="_blank" href="http://twitter.com/'+name+'">'+user+'</a>';
+        }).replace(/\#([\w\-]+)/g,function(word,term) {
+          term = term.split(/-/).join(' ');
+          return '<a target="_blank" href="http://search.twitter.com/search?q='+encodeURIComponent(term)+'">'+word+'</a>';
+        });
+      }
+
       TwitterCouch(db, design, function(tw) {
-        tw.friendsTimeline(function(tweets) {
-          renderTimeline(tweets);
+        tw.friendsTimeline(renderTimeline);
+        $('a[href="#refreshTweets"]').click(function() {
+          tw.friendsTimeline(renderTimeline, true);
+        });
+        
+        $('#updateStatus').submit(function(e) {
+          e.preventDefault();
+          var status = $('#updateStatus textarea').val();
+          tw.updateStatus(status);
+          $('#updateStatus textarea').val('');
+          updateCount();
         });
       });
-      
+
+      $('#updateStatus textarea').keypress(function() {
+        setTimeout(updateCount,20);
+      });
+      updateCount();
     });
   </script>
 </html>

@@ -5,7 +5,7 @@ function CouchDesign(db, name) {
 };
 
 function TwitterCouch(db, design, callback) {  
-  var currentUser = null;
+  var currentTwitterID = null;
   var host = "twitter.com";
   function getJSON(path, params, cb) {
     var url = "http://"+host+path+".json?callback=?";
@@ -45,36 +45,73 @@ function TwitterCouch(db, design, callback) {
     });
   };
   
-  var tw = {
-    friendsTimeline : function(cb) {
-      viewFriendsTimeline(currentUser.id, function(storedTweets) {
-        cb(storedTweets);
-        var newestTweet = storedTweets[0];
-        var opts = {};
-        if (newestTweet) {
-          opts.since_id = newestTweet.id;
-        }
-        getJSON("/statuses/friends_timeline", opts, function(tweets) {
-          if (tweets.length > 0) {
-            var doc = {
-              tweets : tweets,
-              friendsTimelineOwner : currentUser.id
-            };
-            db.saveDoc(doc, {success:function() {
-              viewFriendsTimeline(currentUser.id, cb);
-            }});
-          }
-        });
-      });
+  function apiCallProceed(force) {
+    var previousCall = $.cookies.get('twitter-last-call');
+    var d  = new Date;
+    var now = d.getTime();
+    if (force || !previousCall) {
+      $.cookies.set('twitter-last-call', now);
+      return true;
+    } else {
+      if (now - previousCall > 1000 * 60 * 5) {
+        $.cookies.set('twitter-last-call', now);
+        return true;
+      } else {
+        return false;
+      }
     }
   };
-
-  // this is hackish to get around the brokenness of twitter cache
-  window.userInfo = function(data) {
-    currentUser = data[0].user;
-    currentUser.last_tweet = data[0];
-    callback(tw);
+  
+  function getFriendsTimeline(cb, opts) {
+    getJSON("/statuses/friends_timeline", opts, function(tweets) {
+      if (tweets.length > 0) {
+        var doc = {
+          tweets : tweets,
+          friendsTimelineOwner : currentTwitterID
+        };
+        db.saveDoc(doc, {success:function() {
+          viewFriendsTimeline(currentTwitterID, cb);
+        }});
+      }
+    });    
   };
 
-  cheapJSONP("http://"+host+"/statuses/user_timeline.json?count=1&callback=userInfo");
+  function getTwitterID(cb) {
+    // todo what about when they are not logged in?
+    var cookieID = $.cookies.get('twitter-user-id');
+    if (cookieID) {
+      currentTwitterID = cookieID;
+      cb(publicMethods);
+    } else {
+      // this is hackish to get around the broken twitter cache
+      window.userInfo = function(data) {
+        currentTwitterID = data[0].user.id;
+        $.cookies.set('twitter-user-id', currentTwitterID)
+        callback(publicMethods);
+      };
+      cheapJSONP("http://"+host+"/statuses/user_timeline.json?count=1&callback=userInfo");      
+    }
+  };
+  
+  var publicMethods = {
+    friendsTimeline : function(cb, force) {
+      viewFriendsTimeline(currentTwitterID, function(storedTweets) {
+        cb(storedTweets);
+        if (apiCallProceed(force)) {
+          var newestTweet = storedTweets[0];
+          var opts = {};
+          if (newestTweet) {
+            opts.since_id = newestTweet.id;
+          }
+          getFriendsTimeline(cb, opts);
+        }
+      });
+    },
+    updateStatus : function(status) {
+      // todo in_reply_to_status_id
+      $.xdom.post('http://twitter.com/statuses/update.json',{status:status});        
+    }
+  };
+  
+  getTwitterID(callback);
 };
