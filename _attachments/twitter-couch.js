@@ -45,6 +45,23 @@ function TwitterCouch(db, design, callback) {
     });
   };
   
+  function viewUserWordCloud(userid, cb) {
+    design.view('userWordCloud', {
+      startkey : [userid],
+      endkey : [userid,{}],
+      group_level : 2,
+      success : function(data) {
+        var cloud = [];
+        $.each(data.rows, function(i,row) {
+          if (row.value > 2) cloud.push([row.key[1], row.value]);
+        });
+        cb(cloud.sort(function(a,b) {
+          return b[1] - a[1];
+        }));
+      }
+    });
+  };
+  
   function apiCallProceed(force) {
     var previousCall = $.cookies.get('twitter-last-call');
     var d  = new Date;
@@ -60,20 +77,6 @@ function TwitterCouch(db, design, callback) {
         return false;
       }
     }
-  };
-  
-  function getFriendsTimeline(cb, opts) {
-    getJSON("/statuses/friends_timeline", opts, function(tweets) {
-      if (tweets.length > 0) {
-        var doc = {
-          tweets : tweets,
-          friendsTimelineOwner : currentTwitterID
-        };
-        db.saveDoc(doc, {success:function() {
-          viewFriendsTimeline(currentTwitterID, cb);
-        }});
-      }
-    });    
   };
 
   function getTwitterID(cb) {
@@ -93,6 +96,30 @@ function TwitterCouch(db, design, callback) {
     }
   };
   
+  function getUserTimeline(userid, cb) {
+    getJSON("/statuses/user_timeline/"+userid, {count:200}, function(tweets) {
+      var doc = {
+        tweets : tweets,
+        userTimeline : userid
+      };
+      db.saveDoc(doc, {success:cb});
+    });
+  };
+  
+  function getFriendsTimeline(cb, opts) {
+    getJSON("/statuses/friends_timeline", opts, function(tweets) {
+      if (tweets.length > 0) {
+        var doc = {
+          tweets : tweets,
+          friendsTimelineOwner : currentTwitterID
+        };
+        db.saveDoc(doc, {success:function() {
+          viewFriendsTimeline(currentTwitterID, cb);
+        }});
+      }
+    });    
+  };
+  
   var publicMethods = {
     friendsTimeline : function(cb, force) {
       viewFriendsTimeline(currentTwitterID, function(storedTweets) {
@@ -110,6 +137,35 @@ function TwitterCouch(db, design, callback) {
     updateStatus : function(status) {
       // todo in_reply_to_status_id
       $.xdom.post('http://twitter.com/statuses/update.json',{status:status});        
+    },
+    userInfo : function(userid, cb) {
+      userid = parseInt(userid);
+      design.view('userTweets', {
+        startkey : [userid,{}],
+        reduce : false,
+        count : 1,
+        descending: true,
+        success : function(view) {
+          cb(view.rows[0].value.user);
+        }
+      });
+    },
+    userWordCloud : function(userid, cb) {
+      userid = parseInt(userid);
+      // check to see if we've got the users back catalog.
+      design.view('userTimeline', {
+        key : userid,
+        success : function(view) {
+          // fetch it if not
+          if (view.rows.length > 0) {
+            viewUserWordCloud(userid, cb);
+          } else {
+            getUserTimeline(userid, function() {
+              viewUserWordCloud(userid, cb);
+            });
+          }
+        }
+      });
     }
   };
   

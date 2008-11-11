@@ -1,9 +1,5 @@
 function(doc) {
-  if (doc.friendsTimelineOwner && doc.tweets) {
-    var k, t;
-    for (k in doc.tweets) {
-      t = doc.tweets[k];
-      emit([doc.friendsTimelineOwner, t.id], t);
-    }
-  }
+  doc.friendsTimelineOwner && doc.tweets && doc.tweets.forEach(function(tweet) {
+    emit([doc.friendsTimelineOwner, tweet.id], tweet);    
+  })
 };

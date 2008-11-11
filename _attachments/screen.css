@@ -50,6 +50,34 @@ br.clear {
   margin-bottom:105px;
 }
 
+.user-details {
+  background:#222;
+  padding:5px;
+  margin:5px 20px 0 20px;
+/*  border:2px inset #000;*/
+}
+
+.user-details dl {
+  width:48%;
+  float:left;
+}
+
+.word-cloud span {
+  margin-right:4px;
+}
+
+.word-cloud {
+  width:48%;
+  float:right;
+}
+
+.user-details dt {
+  float:left;
+  clear:left;
+  font-weight:bold;
+  padding-right:3px;
+}
+
 #controls-wrap {
   height:100px;
   position:fixed;

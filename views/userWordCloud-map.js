@@ -1,9 +1,10 @@
 function(doc) {
   doc.tweets && doc.tweets.forEach(function(tweet) {
     var wordCounts = {};
-    var words = tweet.text.toLowerCase().split(/\W/);
+    var words = tweet.text.toLowerCase().split(/\s/);
     words.forEach(function(word) {
-      if (word.length > 1) {
+      word = word.replace(/[\.:,!]*$/,'');
+      if (word.length > 3) {
         wordCounts[word] = wordCounts[word] || 0;
         wordCounts[word]++;        
       }
