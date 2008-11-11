@@ -71,6 +71,7 @@
             + tweet.source  
             + '</span><br class="clear"/></li>'; 
         }).join(''));
+        $("#tweets ul .created_at a").attr("target","_blank");
       };
       
       var db = $.couch.db(document.location.href.split('/')[3]);
