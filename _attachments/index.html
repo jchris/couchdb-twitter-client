@@ -95,9 +95,9 @@
             + user.location
             +'</dd><dt>Bio:</dt><dd>'
             + linkify(user.description)
-            +'</dd><dt>Web:</dt><dd>'
+            +'</dd>'+(user.url?('<dt>Web:</dt><dd>'
             + a(user.url, user.url)
-            + '</dd><dt>Followers:</dt><dd>'
+            + '</dd>'):'')+'<dt>Followers:</dt><dd>'
             + a('http://twitter.com/'+user.screen_name+'/followers', user.followers_count)
             +'</dd></dl><div class="word-cloud">Loading word cloud...</div><br class="clear"></br></div>');
             tw.userWordCloud(userid, function(cloud) {
