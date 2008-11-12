@@ -10,6 +10,12 @@ a {
   color: #bbf;
 }
 
+h1 {
+  padding:5px;
+  text-align:center;
+  font-size:2em;
+}
+
 #tweets li {
   background:#333;
   margin:5px;
@@ -118,13 +124,13 @@ br.clear {
   background-position: center;
 }
 
-form#updateStatus {
+form {
   background:#222;
   padding:5px;
   margin:5px;
 }
 
-form#updateStatus textarea {
+form textarea {
   background:#444;
   border:1px inset #000;
   color:#eee;
@@ -140,6 +146,16 @@ form#updateStatus input {
   margin:2px;
   position:relative;
   top:-6px;
+}
+
+form#searches {
+  background:#333;
+  width:50%;
+  margin:1px auto;
+}
+
+form#searches p {
+  margin:5px;
 }
 
 p#about {

@@ -167,6 +167,17 @@ function TwitterCouch(db, design, callback) {
           }
         }
       });
+    },
+    userSettings : function(cb) {
+      var docid = "settings:"+currentTwitterID;
+      db.openDoc(docid,{
+        success : function(doc) {
+          cb(doc);
+        },
+        error : function() {          
+          cb({"_id" : docid, searches : []});
+        }
+      });
     }
   };
   

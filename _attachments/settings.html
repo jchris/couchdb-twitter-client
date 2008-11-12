@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>CouchDB Twitter Client: Settings</title>
+    <link rel="stylesheet" href="reset.css" type="text/css">
+    <link rel="stylesheet" href="screen.css" type="text/css">
+  </head>
+  <body>
+    <h1>Set Your Settings</h1>
+    <form id="searches" action="#">
+      <h3>Searches</h3>
+      <p>Enter standing searches, each on it's own line. Results will appear inline with your friend&apos;s tweets.</p>
+      <p><textarea name="searchterms" rows="8" cols="40"></textarea></p>
+      <input type="submit" value="Save Searches">
+      <div id="refreshTweets">&nbsp;</div>
+      <p><a href="index.html">Take me back to the tweets!</a></p>
+    </form>
+    <p id="about"><a href="http://github.com/jchris/couchdb-twitter-client/tree/master">CouchDB Twitter Client</a>: another 24 hour hack by <a href="http:/jchris.mfdz.com/">J Chris Anderson</a>.</p>
+  </body>
+  <script src="/_utils/script/json2.js"></script>
+  <script src="/_utils/script/jquery.js?1.2.6"></script>
+  <script src="/_utils/script/jquery.couch.js?0.8.0"></script>
+  <script src="/_utils/script/jquery.cookies.js"></script>
+  <script src="jquery.xdompost.js"></script>
+  <script src="twitter-couch.js"></script>
+  <script type="text/javascript" charset="utf-8">
+    $(function() {
+
+      $('#refreshTweets').ajaxStart(function() {
+        $(this).addClass('loading');
+      });
+
+      $('#refreshTweets').ajaxStop(function() {
+        $(this).removeClass('loading');
+      });
+      
+      var db = $.couch.db(document.location.href.split('/')[3]);
+      var design = new CouchDesign(db, unescape(document.location.href).split('/')[5]);
+
+      TwitterCouch(db, design, function(tw) {        
+        tw.userSettings(function(settings) {
+          var searchList = settings.searches.join("\n");
+          $('#searches textarea').val(searchList);
+          $('#searches').submit(function(e) {
+            e.preventDefault();
+            var newSearches = $.grep($('#searches textarea').val().split(/\n/), function(search) {
+              return search.length > 1;
+            });
+            settings.searches = newSearches;
+            db.saveDoc(settings);
+          });
+        });
+      });
+
+    });
+  </script>
+</html>
