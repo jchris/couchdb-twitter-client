@@ -148,8 +148,8 @@ function TwitterCouch(db, design, callback) {
     });
   };
   
-  function getSearchResults(term, cb) {
-    $.getJSON("http://search.twitter.com/search.json?callback=?", {q:term}, function(json) {
+  function getSearchResults(term, since_id, cb) {
+    $.getJSON("http://search.twitter.com/search.json?callback=?", {q:term, since_id:since_id}, function(json) {
       var tweets = $.map(json.results,function(t) {
         return searchToTweet(t, json.query);
       });
@@ -182,15 +182,16 @@ function TwitterCouch(db, design, callback) {
     },
     searchTerm : function(term, cb) {
       viewSearchResults(term, function(tweets) {
-        var recent = 0;
+        var recent = 0, since_id = 0;
         $.each(tweets,function() {
           if (this.searched_at > recent) recent = this.searched_at;
+          if (this.id > since_id) since_id = this.id;
         });
         var d  = new Date;
         var now = d.getTime();
         var searched = now - recent;
         if (searched > 1000*60*2) {
-          getSearchResults(term, cb);
+          getSearchResults(term, since_id, cb);
         } else {
           cb(tweets);
         }
