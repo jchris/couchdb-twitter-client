@@ -37,33 +37,41 @@ function TwitterRender(tw) {
   function tweetUserDetails() {
     var li = $(this).parent('li');
     var userid = li.find('h3').attr('class');
-    tw.userInfo(userid, function(user) {
-      li.append('<div class="user-details"><dl><dt>Location:</dt><dd>'
-      + user.location
-      +'</dd><dt>Bio:</dt><dd>'
-      + linkify(user.description)
-      +'</dd>'+(user.url?('<dt>Web:</dt><dd>'
-      + a(user.url, user.url)
-      + '</dd>'):'')+'<dt>Followers:</dt><dd>'
-      + a('http://twitter.com/'+user.screen_name+'/followers', user.followers_count)
-      +'</dd></dl><div class="word-cloud">Loading word cloud...</div><br class="clear"></br></div>');
-      tw.userWordCloud(userid, function(cloud) {
-        var html = $.map(cloud,function(row) {
-          return '<span title="'+row[1]+'" style="font-size:'+(parseInt(row[1])+5)+'px">'+linkify(row[0])+'</span>';
-        }).join(' ');
-        li.find('.word-cloud').html(html);
+    // todo use a local hash to get userid from screen_name if we have it
+    if (userid && userid != 'undefined') { 
+      tw.userInfo(userid, function(user) {
+        li.append('<div class="user-details"><dl><dt>Location:</dt><dd>'
+        + user.location
+        +'</dd><dt>Bio:</dt><dd>'
+        + linkify(user.description)
+        +'</dd>'+(user.url?('<dt>Web:</dt><dd>'
+        + a(user.url, user.url)
+        + '</dd>'):'')+'<dt>Followers:</dt><dd>'
+        + a('http://twitter.com/'+user.screen_name+'/followers', user.followers_count)
+        +'</dd></dl><div class="word-cloud">Loading word cloud...</div><br class="clear"></br></div>');
+        tw.userWordCloud(userid, function(cloud) {
+          var html = $.map(cloud,function(row) {
+            return '<span title="'+row[1]+'" style="font-size:'+(parseInt(row[1])+5)+'px">'+linkify(row[0])+'</span>';
+          }).join(' ');
+          li.find('.word-cloud').html(html);
+        });
       });
-    });
-    li.find('img.profile').unbind('click').click(function() {
-      li.find('.user-details').toggle();
-    });
+      li.find('img.profile').unbind('click').click(function() {
+        li.find('.user-details').toggle();
+      });
+    }
   };
   
   var publicMethods = {
     renderTimeline : function(tweets, userid) {
       $("#tweets ul").html($.map(tweets, function(tweet) {
-        var reply = (userid && tweet.in_reply_to_user_id && tweet.in_reply_to_user_id == userid);
-        return '<li'+(reply?' class="reply"':'')
+        var cls = false;
+        if (userid && tweet.in_reply_to_user_id && tweet.in_reply_to_user_id == userid) {
+          cls = "reply";
+        } else if (tweet.search) {
+          cls = "search";
+        }
+        return '<li'+(cls?' class="'+cls+'"':'')
           + '><img title="Click for details" class="profile" src="'
           + tweet.user.profile_image_url + '" />'
           + '<h3 class="'+tweet.user.id+'"><a target="_blank" class="user" title="'
@@ -74,8 +82,7 @@ function TwitterRender(tw) {
           + linkify(tweet.text)
           + ' <span class="created_at">'
           + a('http://twitter.com/'+tweet.user.screen_name+'/status/'+tweet.id, prettyDate(tweet.created_at))  
-          + ' via '
-          + tweet.source  
+          + (tweet.source?' via ' + tweet.source:'')
           + '</span><br class="clear"/></li>'; 
       }).join(''));
       $("#tweets ul .created_at a").attr("target","_blank");

@@ -51,20 +51,62 @@
         $('#statusCount').text(140 - len);          
       };
 
-      TwitterCouch(db, design, function(tw) {
+      TwitterCouch(db, design, function(tw, userID) {
         var r = TwitterRender(tw);
-        // load the initial tweets
-        tw.friendsTimeline(r.renderTimeline);
+
+        var knownTweets = {};
+        function applyTweets(tweets) {
+          $.each(tweets, function() {
+            var id = this.id.toString();
+            if (knownTweets[id]) {
+              // we've got the tweet
+              if (!knownTweets[id].source && this.source) {
+                // but it's a search and here's the real one
+                this.search = knownTweets[id].search;
+                knownTweets[id] = this;
+              }
+            } else {
+              // store it for the same time
+              knownTweets[id] = this;
+            }
+          });
+          // return tweets sorted in descending order;
+          var allTweets = [];
+          $.each(knownTweets,function(k,v) {
+            allTweets.push(v);
+          });
+          return allTweets.sort(function(a,b) {
+            return b.id - a.id;
+          });
+        };
         
-        // refresh on click
-        $('a[href="#refreshTweets"]').click(function() {
-          tw.friendsTimeline(r.renderTimeline, true);
+        function renderAllTweets(tweets) {
+          r.renderTimeline(applyTweets(tweets), userID);
+        };
+        
+        function refreshTweets(terms, force) {
+          terms = terms || [];
+          tw.friendsTimeline(renderAllTweets, force);
+          $.each(terms, function() {
+            tw.searchTerm(this,renderAllTweets);            
+          });
+        };
+        
+        
+        tw.userSettings(function(settings) {
+          // load the initial tweets
+          refreshTweets(settings.searches, false);
+          
+          // refresh on click
+          $('a[href="#refreshTweets"]').click(function() {
+            refreshTweets(settings.searches, true);
+          });
+          
+          // auto refresh
+          setInterval(function() {
+            refreshTweets(settings.searches, true);
+          },1000*60*5);          
         });
-        
-        // auto refresh
-        setInterval(function() {
-          tw.friendsTimeline(r.renderTimeline);
-        },1000*60*5);
         
         $('#updateStatus').submit(function(e) {
           e.preventDefault();
@@ -73,7 +115,8 @@
           $('#updateStatus textarea').val('');
           updateCount();
           setTimeout(function() {
-            tw.friendsTimeline(r.renderTimeline, true);            
+            tw.friendsTimeline(renderAllTweets, true);
+            // tw.friendsTimeline(r.renderTimeline, true);            
           },500);
         });
       });

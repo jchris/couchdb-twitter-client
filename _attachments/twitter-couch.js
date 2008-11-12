@@ -85,7 +85,7 @@ function TwitterCouch(db, design, callback) {
     var cookieID = $.cookies.get('twitter-user-id');
     if (cookieID) {
       currentTwitterID = cookieID;
-      cb(publicMethods);
+      cb(publicMethods, currentTwitterID);
     } else {
       // this is hackish to get around the broken twitter cache
       window.userInfo = function(data) {
@@ -121,6 +121,51 @@ function TwitterCouch(db, design, callback) {
     });    
   };
   
+  function searchToTweet(r, term) {
+    return {
+      search : term,
+      text : r.text,
+      user : {
+        screen_name : r.from_user,
+        name : r.from_user,
+        profile_image_url : r.profile_image_url
+      },
+      created_at : r.created_at,
+      id : r.id
+    }
+  };
+  
+  function viewSearchResults(term, cb) {
+    design.view('searchResults',{
+      startkey : [term,{}],
+      endkey : [term],
+      group :true,
+      descending : true,
+      count : 80,
+      success : function(json){
+        cb(uniqueValues(json.rows));
+      }
+    });
+  };
+  
+  function getSearchResults(term, cb) {
+    $.getJSON("http://search.twitter.com/search.json?callback=?", {q:term}, function(json) {
+      var tweets = $.map(json.results,function(t) {
+        return searchToTweet(t, json.query);
+      });
+      var d  = new Date;
+      var now = d.getTime();
+      var doc = {
+        tweets : tweets,
+        search : term,
+        time : now
+      }
+      db.saveDoc(doc, {success:function() {
+        viewSearchResults(term, cb);
+      }});
+    });    
+  };
+  
   var publicMethods = {
     friendsTimeline : function(cb, force) {
       viewFriendsTimeline(currentTwitterID, function(storedTweets) {
@@ -132,6 +177,22 @@ function TwitterCouch(db, design, callback) {
             opts.since_id = newestTweet.id;
           }
           getFriendsTimeline(cb, opts);
+        }
+      });
+    },
+    searchTerm : function(term, cb) {
+      viewSearchResults(term, function(tweets) {
+        var recent = 0;
+        $.each(tweets,function() {
+          if (this.searched_at > recent) recent = this.searched_at;
+        });
+        var d  = new Date;
+        var now = d.getTime();
+        var searched = now - recent;
+        if (searched > 1000*60*2) {
+          getSearchResults(term, cb);
+        } else {
+          cb(tweets);
         }
       });
     },
