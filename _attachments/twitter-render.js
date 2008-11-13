@@ -1,3 +1,16 @@
+RegExp.escape = function(text) {
+  if (!arguments.callee.sRE) {
+    var specials = [
+      '/', '.', '*', '+', '?', '|',
+      '(', ')', '[', ']', '{', '}', '\\'
+    ];
+    arguments.callee.sRE = new RegExp(
+      '(\\' + specials.join('|\\') + ')', 'g'
+    );
+  }
+  return text.replace(arguments.callee.sRE, '\\$1');
+}
+
 function TwitterRender(tw) {
   function prettyDate(time){
   	var date = new Date(time),
@@ -19,13 +32,19 @@ function TwitterRender(tw) {
   		Math.ceil( day_diff / 365 ) + " years ago";
   };
   
-  function linkify(body) {
+  function linkify(body, term) {
+    // this is almost reliable...
+    // if (term) {
+    //   body = body.replace(new RegExp('[^\\@\\#]'+RegExp.escape(term),'i'),
+    //     function(t) {
+    //       return '<strong>'+t+'</strong>';
+    //   });
+    // }
     return body.replace(/https?\:\/\/\S+/g,function(a) {
       return '<a target="_blank" href="'+a+'">'+a+'</a>';
     }).replace(/\@([\w\-]+)/g,function(user,name) {
       return '<a target="_blank" href="http://twitter.com/'+name+'">'+user+'</a>';
     }).replace(/\#([\w\-]+)/g,function(word,term) {
-      term = term.split(/-/).join(' ');
       return '<a target="_blank" href="http://search.twitter.com/search?q='+encodeURIComponent(term)+'">'+word+'</a>';
     });
   };
@@ -74,12 +93,13 @@ function TwitterRender(tw) {
         return '<li'+(cls?' class="'+cls+'"':'')
           + '><img title="Click for details" class="profile" src="'
           + tweet.user.profile_image_url + '" />'
+          + (tweet.search ? a('http://search.twitter.com/search?q='+encodeURIComponent(tweet.search),'#'+tweet.search,'search') : '')
           + '<h3 class="'+tweet.user.id+'"><a target="_blank" class="user" title="'
           + tweet.user.screen_name + '" href="http://twitter.com/'
           + tweet.user.screen_name + '">'
           + tweet.user.name
           +'</a></h3>'
-          + linkify(tweet.text)
+          + '<p>'+linkify(tweet.text) + '</p>'
           + ' <span class="created_at">'
           + a('http://twitter.com/'+tweet.user.screen_name+'/status/'+tweet.id, prettyDate(tweet.created_at))  
           + (tweet.source?' via ' + tweet.source:'')

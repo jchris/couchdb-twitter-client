@@ -92,7 +92,6 @@
           });
         };
         
-        
         tw.userSettings(function(settings) {
           // load the initial tweets
           refreshTweets(settings.searches, false);
@@ -100,6 +99,7 @@
           // refresh on click
           $('a[href="#refreshTweets"]').click(function() {
             refreshTweets(settings.searches, true);
+            return false;
           });
           
           // auto refresh

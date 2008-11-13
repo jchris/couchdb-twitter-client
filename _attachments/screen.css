@@ -1,6 +1,6 @@
 html {
   background:#222;
-  color:#bbb;
+  color:#c0c0c0;
   font-family: Verdana, sans-serif;
   font-size:9pt;
 }
@@ -16,6 +16,10 @@ h1 {
   font-size:2em;
 }
 
+strong {
+  font-weight:bold;
+}
+
 #tweets li {
   background:#333;
   margin:5px;
@@ -27,11 +31,21 @@ h1 {
 }
 
 #tweets li.search {
-  background:#334b3b;
+  background:#334939;
+}
+
+#tweets a.search {
+  float:right;
+  font-size:0.8em;
+  color: #77b;
 }
 
 #tweets h3 {
   font-weight:bold;
+}
+
+#tweets p {
+  margin-bottom:3px;
 }
 
 #tweets h3 a {
@@ -55,6 +69,10 @@ br.clear {
   font-size:0.8em;
   color:#777;
 }
+#tweets .created_at a {
+  color: #77b;
+}
+
 
 #tweets {
   margin-bottom:105px;
