@@ -157,6 +157,7 @@ form textarea {
   border:1px inset #000;
   color:#eee;
   padding:2px;
+  width:60%;
 }
 
 #statusCount {
