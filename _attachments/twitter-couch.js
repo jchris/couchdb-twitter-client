@@ -199,7 +199,7 @@ function TwitterCouch(db, design, callback) {
     },
     updateStatus : function(status) {
       // todo in_reply_to_status_id
-      $.xdom.post('http://twitter.com/statuses/update.json',{status:status});        
+      $.xdom.post('http://twitter.com/statuses/update.xml',{status:status});        
     },
     userInfo : function(userid, cb) {
       userid = parseInt(userid);
