@@ -88,11 +88,17 @@ function TwitterCouch(db, design, callback) {
       cb(publicMethods, currentTwitterID);
     } else {
       // this is hackish to get around the broken twitter cache
+      var hasUserInfo = false;
       window.userInfo = function(data) {
         currentTwitterID = data[0].user.id;
-        $.cookies.set('twitter-user-id', currentTwitterID)
-        callback(publicMethods);
+        $.cookies.set('twitter-user-id', currentTwitterID);
+        hasUserInfo = true;
+        cb(publicMethods, currentTwitterID);
       };
+      setTimeout(function() {
+        if (hasUserInfo) return;
+        alert("There seems to have been a problem getting your logged in twitter info. Please log into Twitter via twitter.com, and then return to this page.")
+      },2000);
       cheapJSONP("http://"+host+"/statuses/user_timeline.json?count=1&callback=userInfo");      
     }
   };
