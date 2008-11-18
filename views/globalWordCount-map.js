@@ -10,7 +10,7 @@ function(doc) {
       }
     });
     for (var w in wordCounts) {
-      emit([tweet.user.id, w, tweet.id], wordCounts[w]);
+      emit([w, tweet.id], wordCounts[w]);
     }
   });
 };

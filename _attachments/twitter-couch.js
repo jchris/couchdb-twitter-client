@@ -45,20 +45,100 @@ function TwitterCouch(db, design, callback) {
     });
   };
   
-  function viewUserWordCloud(userid, cb) {
+  var gWC = null;
+  function globalWordCloud(cb) {
+    if (gWC) {
+      cb(gWC)
+    } else {
+      
+      design.view('globalWordCount',{
+        success : function(data) {
+          var tWords = data.rows[0].value;
+          console.log('make request');
+          design.view('globalWordCount',{
+            reduce: true,
+            group_level : 1,
+            success : function(view) {
+              gWC = {};
+              var max = 0
+              console.log(""+ view.rows.length + " rows");
+              var st = (new Date()).getTime();
+              for (var i=0; i < view.rows.length; i++) {
+                if (view.rows[i].value > max) max = view.rows[i].value;
+              }
+              console.log("iterate "+((new Date()).getTime() - st))
+              var maxPerc = max / tWords;
+              var multpl = 100 / maxPerc;
+              st = (new Date()).getTime();
+              for (var i=0; i < view.rows.length; i++) {
+                var row = view.rows[i];
+                if (row.value > 4) {
+                  gWC[row.key] = (row.value / tWords) * multpl;                  
+                }
+              };
+              console.log("hash "+((new Date()).getTime() - st))
+              cb(gWC);              
+            }
+          });
+        }
+      });
+    }
+  };
+  
+  // query plan
+  // for each word, what's the chance of user using it? (times said / total words)
+  // for each word, what's the chance of anyone using it?
+  // (ever said / total recorded words)
+  // subtract global ratio from user ratio
+
+  // words the user uses more than other people do, will have the highest scores.
+  function calcUserWordCloud(userid, cb) {
+    globalWordCloud(function(gCloud) { // normalized to 100
+      viewUserWordCloud(userid, gCloud, function(usCloud) {
+        console.log(usCloud);
+        cb(usCloud);
+      });
+    });
+  };
+  
+  function userTotalWords(userid, cb) {
     design.view('userWordCloud', {
+      reduce: true, 
       startkey : [userid],
       endkey : [userid,{}],
-      group_level : 2,
+      group_level : 1,
       success : function(data) {
-        var cloud = [];
-        $.each(data.rows, function(i,row) {
-          if (row.value > 2) cloud.push([row.key[1], row.value]);
-        });
-        cb(cloud.sort(function(a,b) {
-          return b[1] - a[1];
-        }));
-      }
+        cb(data.rows[0].value);
+      } 
+    })
+  };
+  
+  function viewUserWordCloud(userid, gCloud, cb) {
+    userTotalWords(userid, function(uTotal) {
+      design.view('userWordCloud', {
+        startkey : [userid],
+        endkey : [userid,{}],
+        group_level : 2,
+        success : function(data) {
+          var cloud = [];
+          var max = 0
+          for (var i=0; i < data.rows.length; i++) {
+            if (data.rows[i].value > max) max = data.rows[i].value;
+          }
+          var maxPerc = max / uTotal;
+          var multpl = 100 / maxPerc;
+          
+          $.each(data.rows, function(i,row) {
+            var uProb = (row.value / uTotal) * multpl;
+            var gProb = gCloud[row.key[1]] || 0;
+            var nProb = (uProb - gProb);
+            if (nProb > 1) cloud.push([row.key[1], nProb]);
+          });
+          cb(cloud.sort(function(a,b) {
+            return b[1] - a[1];
+          }));
+        }
+      });
     });
   };
   
@@ -227,10 +307,10 @@ function TwitterCouch(db, design, callback) {
         success : function(view) {
           // fetch it if not
           if (view.rows.length > 0) {
-            viewUserWordCloud(userid, cb);
+            calcUserWordCloud(userid, cb);
           } else {
             getUserTimeline(userid, function() {
-              viewUserWordCloud(userid, cb);
+              calcUserWordCloud(userid, cb);
             });
           }
         }

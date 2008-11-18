@@ -5,7 +5,7 @@ function(keys, values, rr) {
     // operate on the unique set of keys
     var k, v, seen = {}, result = 0;
     for (var i = keys.length - 1; i >= 0; i--){
-      k = keys[i][0]; // the key
+      k = keys[i][0];
       v = values[i];
       if (!seen[k]) {
         result = result + v;
