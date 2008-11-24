@@ -285,7 +285,8 @@ function TwitterCouch(db, design, callback) {
     },
     updateStatus : function(status) {
       // todo in_reply_to_status_id
-      $.xdom.post('http://twitter.com/statuses/update.xml',{status:status});        
+      $.xdom.post('http://twitter.com/statuses/update.xml',{
+        status:status, source:"couchdbtwitterclient"});        
     },
     userInfo : function(userid, cb) {
       userid = parseInt(userid);
