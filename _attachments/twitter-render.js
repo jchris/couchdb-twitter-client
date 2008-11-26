@@ -70,7 +70,7 @@ function TwitterRender(tw) {
         +'</dd></dl><div class="word-cloud">Loading word cloud...</div><br class="clear"></br></div>');
         tw.userWordCloud(userid, function(cloud) {
           var html = $.map(cloud,function(row) {
-            return '<span title="'+row[1]+'" style="font-size:'+(parseInt(row[1])+5)+'px">'+linkify(row[0])+'</span>';
+            return '<span title="'+row[1]+'" style="font-size:'+(parseInt(row[1])+8)+'px">'+linkify(row[0])+'</span>';
           }).join(' ');
           li.find('.word-cloud').html(html);
         });

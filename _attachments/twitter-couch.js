@@ -45,43 +45,55 @@ function TwitterCouch(db, design, callback) {
     });
   };
   
+  
+  
   var gWC = null;
+  
+  function buildGWC(cb) {
+    design.view('globalWordCount',{
+      success : function(data) {
+        var tWords = data.rows[0].value;
+        design.view('globalWordCount',{
+          reduce: true,
+          group_level : 1,
+          success : function(view) {
+            gWC = {};
+            var max = 0
+            var st = (new Date()).getTime();
+            for (var i=0; i < view.rows.length; i++) {
+              if (view.rows[i].value > max) max = view.rows[i].value;
+            }
+            var maxPerc = max / tWords;
+            var multpl = 100 / maxPerc;
+            st = (new Date()).getTime();
+            for (var i=0; i < view.rows.length; i++) {
+              var row = view.rows[i];
+              if (row.value > 4) {
+                gWC[row.key] = (row.value / tWords) * multpl;                  
+              }
+            };
+            db.saveDoc({
+              "_id":"gWC",
+              "cloud":gWC
+            });
+            cb(gWC);
+          }
+        });
+      }
+    });
+  };
+  
   function globalWordCloud(cb) {
     if (gWC) {
       cb(gWC)
     } else {
-      
-      design.view('globalWordCount',{
-        success : function(data) {
-          var tWords = data.rows[0].value;
-          console.log('make request');
-          design.view('globalWordCount',{
-            reduce: true,
-            group_level : 1,
-            success : function(view) {
-              gWC = {};
-              var max = 0
-              console.log(""+ view.rows.length + " rows");
-              var st = (new Date()).getTime();
-              for (var i=0; i < view.rows.length; i++) {
-                if (view.rows[i].value > max) max = view.rows[i].value;
-              }
-              console.log("iterate "+((new Date()).getTime() - st))
-              var maxPerc = max / tWords;
-              var multpl = 100 / maxPerc;
-              st = (new Date()).getTime();
-              for (var i=0; i < view.rows.length; i++) {
-                var row = view.rows[i];
-                if (row.value > 4) {
-                  gWC[row.key] = (row.value / tWords) * multpl;                  
-                }
-              };
-              console.log("hash "+((new Date()).getTime() - st))
-              cb(gWC);              
-            }
-          });
-        }
-      });
+      db.openDoc('gWC', {
+        success: function(doc) {
+          cb(doc.cloud);
+        },
+        error : function() {
+          buildGWC(cb);
+        }});
     }
   };
   
@@ -95,7 +107,7 @@ function TwitterCouch(db, design, callback) {
   function calcUserWordCloud(userid, cb) {
     globalWordCloud(function(gCloud) { // normalized to 100
       viewUserWordCloud(userid, gCloud, function(usCloud) {
-        console.log(usCloud);
+        usCloud.length = Math.min(usCloud.length,100);
         cb(usCloud);
       });
     });
