@@ -87,9 +87,9 @@
         function refreshTweets(terms, force) {
           terms = terms || [];
           tw.friendsTimeline(renderAllTweets, force);
-          $.each(terms, function() {
-            tw.searchTerm(this,renderAllTweets);            
-          });
+          for (var i=0; i < terms.length; i++) {
+            tw.searchTerm(terms[i],renderAllTweets);            
+          };
         };
         
         tw.userSettings(function(settings) {
