@@ -204,7 +204,7 @@ function TwitterCouch(db, design, callback) {
         db.saveDoc(doc, {success:function() {
           viewFriendsTimeline(currentTwitterID, cb);
         }});
-      }
+      } // we'd need an else here if the timeline wasn't already displayed
     });    
   };
   
@@ -240,16 +240,21 @@ function TwitterCouch(db, design, callback) {
       var tweets = $.map(json.results,function(t) {
         return searchToTweet(t, json.query);
       });
-      var d  = new Date;
-      var now = d.getTime();
-      var doc = {
-        tweets : tweets,
-        search : term,
-        time : now
+      if (tweets.length > 0) {
+        tweets.length = Math.min(tweets.length, 200);
+        var d  = new Date;
+        var now = d.getTime();
+        var doc = {
+          tweets : tweets,
+          search : term,
+          time : now
+        }
+        db.saveDoc(doc, {success:function() {
+          viewSearchResults(term, cb);
+        }});
+      } else {
+        viewSearchResults(term, cb);        
       }
-      db.saveDoc(doc, {success:function() {
-        viewSearchResults(term, cb);
-      }});
     });    
   };
   

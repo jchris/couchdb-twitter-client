@@ -43,6 +43,10 @@
         $(this).removeClass('loading');
       });
 
+      setInterval(function() {
+        $('#refreshTweets').removeClass('loading');
+      },1000*30);
+
       var db = $.couch.db(document.location.href.split('/')[3]);
       var design = new CouchDesign(db, unescape(document.location.href).split('/')[5]);
 
@@ -85,7 +89,9 @@
         };
         
         function refreshTweets(terms, force) {
+          knownTweets = {}; // periodic garbage collection
           terms = terms || [];
+          
           tw.friendsTimeline(renderAllTweets, force);
           for (var i=0; i < terms.length; i++) {
             tw.searchTerm(terms[i],renderAllTweets);            
