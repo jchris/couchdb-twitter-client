@@ -196,6 +196,7 @@ function TwitterCouch(db, design, callback) {
   function getFriendsTimeline(cb, opts) {
     getJSON("/statuses/friends_timeline", opts, function(tweets) {
       if (tweets.length > 0) {
+        tweets.length = Math.min(tweets.length, 200);
         var doc = {
           tweets : tweets,
           friendsTimelineOwner : currentTwitterID
