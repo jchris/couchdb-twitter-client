@@ -49,8 +49,8 @@ function TwitterRender(tw) {
     });
   };
   
-  function a(href, text, cls) {
-    return '<a target="_blank" '+(cls?'class="'+cls+'"':'')+' href="'+href+'">'+text+'</a>'
+  function a(href, text, cls, xtr) {
+    return '<a target="_blank" '+(cls?'class="'+cls+'"':'')+' href="'+href+'" '+(xtr||'')+'>'+text+'</a>'
   };
   
   function tweetUserDetails() {
@@ -85,8 +85,8 @@ function TwitterRender(tw) {
     return parseInt(st, 16);
   };
   
-  function toHex(num) {
-    return num.toString(16);
+  function toColor(r,g,b) {
+    return 'rgb('+r+', '+g+', '+b+')';
   };
   
   function colorForWord(word, dim) {
@@ -95,12 +95,14 @@ function TwitterRender(tw) {
       return colorCache[key]
     }
     
-    var color = hex_md4(word).replace(/[^0-9a-f]/g,'').substring(0,6);
-    var redgreenblue = [(color.substring(0,2)),(color.substring(2,4)),(color.substring(4,6))];
-    for (var i=0; i < redgreenblue.length; i++) {
-      redgreenblue[i] = toHex((deHex(redgreenblue[i])) / dim).substring(0,2);
+    var color = hex_md4(word).substring(0,6);
+    
+    var rgb = [(color.substring(0,2)),(color.substring(2,4)),(color.substring(4,6))];
+    for (var i=0; i < rgb.length; i++) {
+      rgb[i] = Math.floor((deHex(rgb[i])) / dim);
     };
-    colorCache[key] = redgreenblue.join('');
+    colorCache[key] = toColor(rgb[0], rgb[1], rgb[2]);
+    console.log(colorCache[key])
     return colorCache[key];
   }
   
@@ -109,19 +111,20 @@ function TwitterRender(tw) {
   var publicMethods = {
     renderTimeline : function(tweets, userid) {
       $("#tweets ul").html($.map(tweets, function(tweet) {
-        var cls = false, color, dim;
+        var cls = false, color, dim, bright;
         if (userid && tweet.in_reply_to_user_id && tweet.in_reply_to_user_id == userid) {
           cls = "reply";
         } else if (tweet.search) {
           // cls = "search";
           color = colorForWord(tweet.search, 2.75);
           dim = colorForWord(tweet.search, 3.5);
+          bright = colorForWord(tweet.search, 1.5);
         }
         return '<li'+(cls?' class="'+cls+'"':'')
-          + (color ? ' style="border:4px solid #'+color+'; background:#'+dim+';"' : '')
+          + (color ? ' style="border:4px solid '+color+'; background:'+dim+';"' : '')
           + '><img title="Click for details" class="profile" src="'
           + tweet.user.profile_image_url + '" />'
-          + (tweet.search ? a('http://search.twitter.com/search?q='+encodeURIComponent(tweet.search),'#'+tweet.search,'search') : '')
+          + (tweet.search ? a('http://search.twitter.com/search?q='+encodeURIComponent(tweet.search),'#'+tweet.search,'search',(bright?'style="color:'+bright+'"':'')) : '')
           + '<h3 class="'+tweet.user.id+'"><a target="_blank" class="user" title="'
           + tweet.user.screen_name + '" href="http://twitter.com/'
           + tweet.user.screen_name + '">'
