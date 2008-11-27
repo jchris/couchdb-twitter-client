@@ -45,10 +45,19 @@ function TwitterCouch(db, design, callback) {
     });
   };
   
+  //// WORD CLOUD
+  // words are displayed at a size that is a function of the global set of words, 
+  // compared with the user's most-used words. all this stuff with callbacks here 
+  // is to do with that. 
+  //
+  // query plan
+  // for each word, what's the chance of user using it? (times said / total words)
+  // for each word, what's the chance of anyone using it?
+  // (ever said / total recorded words)
+  // subtract global ratio from user ratio
   
-  
+  // global word count
   var gWC = null;
-  
   function buildGWC(cb) {
     design.view('globalWordCount',{
       success : function(data) {
@@ -97,12 +106,7 @@ function TwitterCouch(db, design, callback) {
     }
   };
   
-  // query plan
-  // for each word, what's the chance of user using it? (times said / total words)
-  // for each word, what's the chance of anyone using it?
-  // (ever said / total recorded words)
-  // subtract global ratio from user ratio
-
+  // user word count
   // words the user uses more than other people do, will have the highest scores.
   function calcUserWordCloud(userid, cb) {
     globalWordCloud(function(gCloud) { // normalized to 100
@@ -154,6 +158,7 @@ function TwitterCouch(db, design, callback) {
     });
   };
   
+  // twitter api core
   function apiCallProceed(force) {
     var previousCall = $.cookies.get('twitter-last-call');
     var d  = new Date;
@@ -172,6 +177,7 @@ function TwitterCouch(db, design, callback) {
     }
   };
 
+  // login
   function getTwitterID(cb) {
     // todo what about when they are not logged in?
     var cookieID = $.cookies.get('twitter-user-id');
@@ -195,6 +201,7 @@ function TwitterCouch(db, design, callback) {
     }
   };
   
+  // a user's recent tweets
   function getUserTimeline(userid, cb) {
     getJSON("/statuses/user_timeline/"+userid, {count:200}, function(tweets) {
       var doc = {
@@ -205,6 +212,7 @@ function TwitterCouch(db, design, callback) {
     });
   };
   
+  // timeline for the logged in user
   function getFriendsTimeline(cb, opts) {
     getJSON("/statuses/friends_timeline", opts, function(tweets) {
       if (tweets.length > 0) {
@@ -219,6 +227,8 @@ function TwitterCouch(db, design, callback) {
       } // we'd need an else here if the timeline wasn't already displayed
     });    
   };
+  
+  //// search
   
   function searchToTweet(r, term) {
     return {
