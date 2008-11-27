@@ -177,7 +177,7 @@ function TwitterCouch(db, design, callback) {
     }
   };
 
-  // login
+  // login, init App
   function getTwitterID(cb) {
     // todo what about when they are not logged in?
     var cookieID = $.cookies.get('twitter-user-id');
@@ -358,5 +358,6 @@ function TwitterCouch(db, design, callback) {
     }
   };
   
+  // init App, run callback
   getTwitterID(callback);
 };
