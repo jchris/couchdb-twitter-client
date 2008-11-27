@@ -183,6 +183,7 @@ function TwitterCouch(db, design, callback) {
     var cookieID = $.cookies.get('twitter-user-id');
     if (cookieID) {
       currentTwitterID = cookieID;
+      // pass self to the user
       cb(publicMethods, currentTwitterID);
     } else {
       // this is hackish to get around the broken twitter cache
@@ -229,7 +230,6 @@ function TwitterCouch(db, design, callback) {
   };
   
   //// search
-  
   function searchToTweet(r, term) {
     return {
       search : term,
