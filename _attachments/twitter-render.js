@@ -90,12 +90,18 @@ function TwitterRender(tw) {
   };
   
   function colorForWord(word, dim) {
-    var color = hex_md4(word).substring(0,6);
+    var key = word.toString() + dim.toString();
+    if (colorCache[key]) {
+      return colorCache[key]
+    }
+    
+    var color = hex_md4(word).replace(/[^0-9a-f]/g,'').substring(0,6);
     var redgreenblue = [(color.substring(0,2)),(color.substring(2,4)),(color.substring(4,6))];
     for (var i=0; i < redgreenblue.length; i++) {
       redgreenblue[i] = toHex((deHex(redgreenblue[i])) / dim).substring(0,2);
     };
-    return redgreenblue.join('');
+    colorCache[key] = redgreenblue.join('');
+    return colorCache[key];
   }
   
   var colorCache = {};
@@ -103,16 +109,16 @@ function TwitterRender(tw) {
   var publicMethods = {
     renderTimeline : function(tweets, userid) {
       $("#tweets ul").html($.map(tweets, function(tweet) {
-        var cls = false, color;
+        var cls = false, color, dim;
         if (userid && tweet.in_reply_to_user_id && tweet.in_reply_to_user_id == userid) {
           cls = "reply";
         } else if (tweet.search) {
-          cls = "search";
-          color = colorCache[tweet.search] || colorForWord(tweet.search, 2.5);
-          colorCache[tweet.search] = color;
+          // cls = "search";
+          color = colorForWord(tweet.search, 2.75);
+          dim = colorForWord(tweet.search, 3.5);
         }
         return '<li'+(cls?' class="'+cls+'"':'')
-          + (color ? ' style="background:#'+color+';"' : '')
+          + (color ? ' style="border:4px solid #'+color+'; background:#'+dim+';"' : '')
           + '><img title="Click for details" class="profile" src="'
           + tweet.user.profile_image_url + '" />'
           + (tweet.search ? a('http://search.twitter.com/search?q='+encodeURIComponent(tweet.search),'#'+tweet.search,'search') : '')
