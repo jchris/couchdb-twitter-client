@@ -81,16 +81,38 @@ function TwitterRender(tw) {
     }
   };
   
+  function deHex(st) {
+    return parseInt(st, 16);
+  };
+  
+  function toHex(num) {
+    return num.toString(16);
+  };
+  
+  function colorForWord(word, dim) {
+    var color = hex_md4(word).substring(0,6);
+    var redgreenblue = [(color.substring(0,2)),(color.substring(2,4)),(color.substring(4,6))];
+    for (var i=0; i < redgreenblue.length; i++) {
+      redgreenblue[i] = toHex((deHex(redgreenblue[i])) / dim).substring(0,2);
+    };
+    return redgreenblue.join('');
+  }
+  
+  var colorCache = {};
+  
   var publicMethods = {
     renderTimeline : function(tweets, userid) {
       $("#tweets ul").html($.map(tweets, function(tweet) {
-        var cls = false;
+        var cls = false, color;
         if (userid && tweet.in_reply_to_user_id && tweet.in_reply_to_user_id == userid) {
           cls = "reply";
         } else if (tweet.search) {
           cls = "search";
+          color = colorCache[tweet.search] || colorForWord(tweet.search, 2.5);
+          colorCache[tweet.search] = color;
         }
         return '<li'+(cls?' class="'+cls+'"':'')
+          + (color ? ' style="background:#'+color+';"' : '')
           + '><img title="Click for details" class="profile" src="'
           + tweet.user.profile_image_url + '" />'
           + (tweet.search ? a('http://search.twitter.com/search?q='+encodeURIComponent(tweet.search),'#'+tweet.search,'search') : '')
