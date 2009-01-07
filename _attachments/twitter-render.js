@@ -102,7 +102,6 @@ function TwitterRender(tw) {
       rgb[i] = Math.floor((deHex(rgb[i])) / dim);
     };
     colorCache[key] = toColor(rgb[0], rgb[1], rgb[2]);
-    console.log(colorCache[key])
     return colorCache[key];
   }
   
@@ -124,7 +123,7 @@ function TwitterRender(tw) {
           + (color ? ' style="border:4px solid '+color+'; background:'+dim+';"' : '')
           + '><img title="Click for details" class="profile" src="'
           + tweet.user.profile_image_url + '" />'
-          + (tweet.search ? a('http://search.twitter.com/search?q='+encodeURIComponent(tweet.search),'#'+tweet.search,'search',(bright?'style="color:'+bright+'"':'')) : '')
+          + (tweet.search ? a('http://search.twitter.com/search?q='+encodeURIComponent(tweet.search),'#'+decodeURIComponent(tweet.search),'search',(bright?'style="color:'+bright+'"':'')) : '')
           + '<h3 class="'+tweet.user.id+'"><a target="_blank" class="user" title="'
           + tweet.user.screen_name + '" href="http://twitter.com/'
           + tweet.user.screen_name + '">'
