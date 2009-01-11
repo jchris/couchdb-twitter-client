@@ -38,7 +38,7 @@ function TwitterCouch(db, design, callback) {
       endkey : [userId],
       group :true,
       descending : true,
-      count : 80,
+      limit : 80,
       success : function(json){
         cb(uniqueValues(json.rows), currentTwitterID);
       }
@@ -198,13 +198,13 @@ function TwitterCouch(db, design, callback) {
         if (hasUserInfo) return;
         alert("There seems to have been a problem getting your logged in twitter info. Please log into Twitter via twitter.com, and then return to this page.")
       },2000);
-      cheapJSONP("http://"+host+"/statuses/user_timeline.json?count=1&callback=userInfo");      
+      cheapJSONP("http://"+host+"/statuses/user_timeline.json?limit=1&callback=userInfo");      
     }
   };
   
   // a user's recent tweets
   function getUserTimeline(userid, cb) {
-    getJSON("/statuses/user_timeline/"+userid, {count:200}, function(tweets) {
+    getJSON("/statuses/user_timeline/"+userid, {limit:200}, function(tweets) {
       var doc = {
         tweets : tweets,
         userTimeline : userid
@@ -250,7 +250,7 @@ function TwitterCouch(db, design, callback) {
       endkey : [term],
       group :true,
       descending : true,
-      count : 80,
+      limit : 80,
       success : function(json){
         cb(uniqueValues(json.rows));
       }
@@ -321,7 +321,7 @@ function TwitterCouch(db, design, callback) {
       design.view('userTweets', {
         startkey : [userid,{}],
         reduce : false,
-        count : 1,
+        limit : 1,
         descending: true,
         success : function(view) {
           cb(view.rows[0].value.user);
